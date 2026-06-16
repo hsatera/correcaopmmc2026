@@ -20,76 +20,72 @@ except Exception:
 # Matriz de Correção (Dados Internos Ocultos)
 # ---------------------------------------------------------
 MATRIZ_RESPOSTAS = {
-    1: {"resp": "A", "dificuldade": "Intermediária", "dominios": ["Gestão e Organização do Processo de Trabalho", "Saúde Coletiva"]},
-    2: {"resp": "D", "dificuldade": "Intermediária", "dominios": ["Gestão e Organização do Processo de Trabalho", "Avaliação da Qualidade e Auditoria", "Saúde Coletiva"]},
-    3: {"resp": "D", "dificuldade": "Intermediária", "dominios": ["Princípios da APS", "Avaliação da Qualidade e Auditoria", "Saúde Coletiva"]},
-    4: {"resp": "C", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    5: {"resp": "C", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    6: {"resp": "C", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    7: {"resp": "A", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    8: {"resp": "C", "dificuldade": "Fácil", "dominios": ["Pesquisa Médica", "Gestão em Saúde", "Comunicação e Docência"]},
-    9: {"resp": "B", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    10: {"resp": "C", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    11: {"resp": "C", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    12: {"resp": "C", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    13: {"resp": "C", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    14: {"resp": "C", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde", "Princípios da APS"]},
-    15: {"resp": "C", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    16: {"resp": "C", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    17: {"resp": "D", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    18: {"resp": "A", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    19: {"resp": "C", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    20: {"resp": "B", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    21: {"resp": "D", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    22: {"resp": "D", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    23: {"resp": "D", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    24: {"resp": "B", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    25: {"resp": "D", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    26: {"resp": "A", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    27: {"resp": "A", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    28: {"resp": "B", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    29: {"resp": "C", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    30: {"resp": "D", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    31: {"resp": "B", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    32: {"resp": "C", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    33: {"resp": "D", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    34: {"resp": "A", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde", "Saúde Coletiva"]},
-    35: {"resp": "B", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    36: {"resp": "C", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    37: {"resp": "C", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
-    38: {"resp": "A", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
-    39: {"resp": "B", "dificuldade": "Fácil", "dominios": ["Saúde Coletiva"]},
-    40: {"resp": "B", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]}
+    1: {"resp": "A", "tema": "Acesso Avançado", "dificuldade": "Intermediária", "dominios": ["Gestão e Organização do Processo de Trabalho", "Saúde Coletiva"]},
+    2: {"resp": "D", "tema": "Indicador APS", "dificuldade": "Intermediária", "dominios": ["Gestão e Organização do Processo de Trabalho", "Avaliação da Qualidade e Auditoria", "Saúde Coletiva"]},
+    3: {"resp": "D", "tema": "Avaliação – PCATool", "dificuldade": "Intermediária", "dominios": ["Princípios da APS", "Avaliação da Qualidade e Auditoria", "Saúde Coletiva"]},
+    4: {"resp": "C", "tema": "Saúde Mental – SAA", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    5: {"resp": "C", "tema": "Saúde Mental – Desprescrição", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    6: {"resp": "C", "tema": "Saúde Mental – Ideação Suicida", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    7: {"resp": "A", "tema": "Saúde Mental – Manejo Farmacológico", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    8: {"resp": "C", "tema": "Pesquisa em Saúde", "dificuldade": "Fácil", "dominios": ["Pesquisa Médica", "Gestão em Saúde", "Comunicação e Docência"]},
+    9: {"resp": "B", "tema": "Pesquisa em Saúde – CEP", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    10: {"resp": "C", "tema": "Planejamento Reprodutivo", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    11: {"resp": "C", "tema": "Planejamento Reprodutivo", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    12: {"resp": "C", "tema": "Abordagem Familiar", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    13: {"resp": "C", "tema": "Genograma e Ecomapa", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    14: {"resp": "C", "tema": "Prevenção Quaternária", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde", "Princípios da APS"]},
+    15: {"resp": "C", "tema": "Rastreamento em APS", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    16: {"resp": "C", "tema": "Rastreamento de CA de Colo de Útero", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    17: {"resp": "D", "tema": "Rastreamento de CA de Mama", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    18: {"resp": "A", "tema": "Diabetes Mellitus - Diagnóstico", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    19: {"resp": "C", "tema": "Diabetes Mellitus - Manejo", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    20: {"resp": "B", "tema": "Hipertensão Arterial - Diagnóstico", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    21: {"resp": "D", "tema": "Hipertensão Arterial - Manejo", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    22: {"resp": "D", "tema": "Dislipidemia", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    23: {"resp": "D", "tema": "Asma - Manejo", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    24: {"resp": "B", "tema": "DPOC - Manejo", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    25: {"resp": "D", "tema": "Insuficiência Cardíaca", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    26: {"resp": "A", "tema": "Puericultura - Desenvolvimento", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    27: {"resp": "A", "tema": "Puericultura - Crescimento", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    28: {"resp": "B", "tema": "Infecções de Vias Aéreas Superiores", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    29: {"resp": "C", "tema": "Infecção do Trato Urinário - Pediatria", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    30: {"resp": "D", "tema": "Anemia Ferropriva na Infância", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    31: {"resp": "B", "tema": "Pré-Natal de Baixo Risco", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    32: {"resp": "C", "tema": "Sangramento Uterino Anormal", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    33: {"resp": "D", "tema": "Climatério e Menopausa", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    34: {"resp": "A", "tema": "Vulnerabilidades e Saúde LGBT+", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde", "Saúde Coletiva"]},
+    35: {"resp": "B", "tema": "Dermatologia na APS", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    36: {"resp": "C", "tema": "Lombalgia Crônica", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    37: {"resp": "C", "tema": "Polifarmácia no Idoso", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]},
+    38: {"resp": "A", "tema": "Cuidados Paliativos na APS", "dificuldade": "Fácil", "dominios": ["Atenção à Saúde"]},
+    39: {"resp": "B", "tema": "Notificação Compulsória", "dificuldade": "Fácil", "dominios": ["Saúde Coletiva"]},
+    40: {"resp": "B", "tema": "HAS - MRPA", "dificuldade": "Intermediária", "dominios": ["Atenção à Saúde"]}
 }
 
 # Cabeçalho Oficial da Prova
 str.title("📝 AVALIAÇÃO PMMC JUNHO 2026")
-str.markdown("Selecione os dados de identificação e preencha as alternativas escolhidas para cada questão.")
+str.markdown("Selecione os seus dados de identificação e preencha as alternativas escolhidas para cada questão.")
 
 # ---------------------------------------------------------
 # Identificação do Residente (Dropdowns no Corpo do Site)
 # ---------------------------------------------------------
 str.subheader("👤 Identificação")
 
-# Organizando as seleções iniciais lado a lado de forma leve para o mobile
-c1, c2, c3 = str.columns(3)
+c1, c2 = str.columns(2)
 with c1:
     nivel_residencia = str.selectbox("Nível:", ["R1", "R2"])
 with c2:
     instituicao = str.selectbox("Instituição:", ["PMC-CHOV", "Unicamp", "PUCCAMP", "PMC-Gatti"])
-with c3:
-    ano_avaliacao = str.selectbox("Ano:", ["2026", "2025", "2024"])
 
 str.divider()
 
 # ---------------------------------------------------------
-# Painel de Respostas (Uma embaixo da outra para Mobile)
+# Painel de Respostas (Mobile-Friendly)
 # ---------------------------------------------------------
 str.subheader("📋 Painel de Questões")
 
 respostas_inseridas = {}
 
-# Exibição vertical simples (uma questão embaixo da outra), ideal para telas verticais de smartphone
 for numero_q in range(1, 41):
     respostas_inseridas[numero_q] = str.radio(
         f"Questão {numero_q:02d}:",
@@ -103,7 +99,6 @@ str.divider()
 
 # Botão de Envio
 if str.button("📊 Emitir Boletim", type="primary", use_container_width=True):
-    # Verifica se faltou alguma resposta
     pendentes = [q for q, resp in respostas_inseridas.items() if resp is None]
     
     if pendentes:
@@ -122,7 +117,6 @@ if str.button("📊 Emitir Boletim", type="primary", use_container_width=True):
             if correto:
                 total_acertos += 1
             
-            # Agrupamento estatístico interno
             nivel_dif = dados_referencia["dificuldade"]
             indicadores_dificuldade[nivel_dif]["total"] += 1
             if correto:
@@ -137,6 +131,7 @@ if str.button("📊 Emitir Boletim", type="primary", use_container_width=True):
 
             dados_detalhados.append({
                 "Questão": q,
+                "Tema": dados_referencia["tema"],
                 "Sua Escolha": alternativa_usuario,
                 "Situação": "Correto" if correto else "Incorreto"
             })
@@ -147,14 +142,12 @@ if str.button("📊 Emitir Boletim", type="primary", use_container_width=True):
         respostas_finais_banco = {str(k): v for k, v in respostas_inseridas.items()}
         dados_registro = {
             "residente_nivel": nivel_residencia,
-            "instituicao": i, # Utiliza o dropdown da instituição
-            "ano_contexto": ano_avaliacao, # Adiciona o ano selecionado nos metadados
+            "instituicao": instituicao,
             "acertos": total_acertos,
             "respostas_usuario": respostas_finais_banco
         }
         
         try:
-            # Envia para a tabela de forma silenciosa
             cliente_banco.table("respostas_simulado").insert(dados_registro).execute()
         except Exception:
             pass
@@ -164,7 +157,6 @@ if str.button("📊 Emitir Boletim", type="primary", use_container_width=True):
         # ---------------------------------------------------------
         str.header("📋 Boletim")
         
-        # Indicadores de aproveitamento empilhados para melhor leitura em celulares
         str.metric("Sua Nota", f"{(total_acertos / 40) * 10:.1f} / 10.0")
         str.metric("Total de Acertos", f"{total_acertos} de 40")
         str.metric("Aproveitamento", f"{(total_acertos / 40) * 100:.1f}%")
