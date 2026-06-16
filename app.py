@@ -3,7 +3,7 @@ import pandas as pd
 from supabase import create_client, Client
 
 # Configurações da página
-str.set_page_config(page_title="Avaliação PMMC", page_icon="📝", layout="wide")
+str.set_page_config(page_title="Avaliação PMMC", page_icon="📝", layout="centered")
 
 # ---------------------------------------------------------
 # Conexão Segura em Segundo Plano
@@ -64,42 +64,45 @@ MATRIZ_RESPOSTAS = {
 
 # Cabeçalho Oficial da Prova
 str.title("📝 AVALIAÇÃO PMMC JUNHO 2026")
-str.markdown("Selecione suas informações de identificação e preencha as alternativas escolhidas para cada uma das 40 questões.")
+str.markdown("Selecione os dados de identificação e preencha as alternativas escolhidas para cada questão.")
 
 # ---------------------------------------------------------
-# Identificação do Residente (Painel Lateral)
+# Identificação do Residente (Dropdowns no Corpo do Site)
 # ---------------------------------------------------------
-str.sidebar.header("👤 Identificação")
-nivel_residencia = str.sidebar.radio("Nível:", ["R1", "R2"])
-instituicao = str.sidebar.selectbox("Instituição:", ["PMC-CHOV", "Unicamp", "PUCCAMP", "PMC-Gatti"])
+str.subheader("👤 Identificação")
 
-str.sidebar.divider()
-str.sidebar.caption("Sistema de processamento de respostas da residência.")
-
-# ---------------------------------------------------------
-# Painel de Respostas
-# ---------------------------------------------------------
-str.subheader("📋 Painel de Questões")
-
-colunas = str.columns(4)
-respostas_inseridas = {}
-
-for numero_q in range(1, 41):
-    # Organiza a distribuição de espaço visual na tela
-    coluna_atual = colunas[(numero_q - 1) % 4]
-    with coluna_atual:
-        respostas_inseridas[numero_q] = str.radio(
-            f"Questão {numero_q:02d}:",
-            ["A", "B", "C", "D"],
-            index=None,
-            key=f"q_{numero_q}",
-            horizontal=True
-        )
+# Organizando as seleções iniciais lado a lado de forma leve para o mobile
+c1, c2, c3 = str.columns(3)
+with c1:
+    nivel_residencia = str.selectbox("Nível:", ["R1", "R2"])
+with c2:
+    instituicao = str.selectbox("Instituição:", ["PMC-CHOV", "Unicamp", "PUCCAMP", "PMC-Gatti"])
+with c3:
+    ano_avaliacao = str.selectbox("Ano:", ["2026", "2025", "2024"])
 
 str.divider()
 
-# Botão de Envio Modificado
-if str.button("📊 Emitir Boletim", type="primary"):
+# ---------------------------------------------------------
+# Painel de Respostas (Uma embaixo da outra para Mobile)
+# ---------------------------------------------------------
+str.subheader("📋 Painel de Questões")
+
+respostas_inseridas = {}
+
+# Exibição vertical simples (uma questão embaixo da outra), ideal para telas verticais de smartphone
+for numero_q in range(1, 41):
+    respostas_inseridas[numero_q] = str.radio(
+        f"Questão {numero_q:02d}:",
+        ["A", "B", "C", "D"],
+        index=None,
+        key=f"q_{numero_q}",
+        horizontal=True
+    )
+
+str.divider()
+
+# Botão de Envio
+if str.button("📊 Emitir Boletim", type="primary", use_container_width=True):
     # Verifica se faltou alguma resposta
     pendentes = [q for q, resp in respostas_inseridas.items() if resp is None]
     
@@ -144,7 +147,8 @@ if str.button("📊 Emitir Boletim", type="primary"):
         respostas_finais_banco = {str(k): v for k, v in respostas_inseridas.items()}
         dados_registro = {
             "residente_nivel": nivel_residencia,
-            "instituicao": instituicao,
+            "instituicao": i, # Utiliza o dropdown da instituição
+            "ano_contexto": ano_avaliacao, # Adiciona o ano selecionado nos metadados
             "acertos": total_acertos,
             "respostas_usuario": respostas_finais_banco
         }
@@ -153,7 +157,6 @@ if str.button("📊 Emitir Boletim", type="primary"):
             # Envia para a tabela de forma silenciosa
             cliente_banco.table("respostas_simulado").insert(dados_registro).execute()
         except Exception:
-            # Falha silenciosa ou aviso genérico de rede para não expor termos técnicos
             pass
 
         # ---------------------------------------------------------
@@ -161,29 +164,26 @@ if str.button("📊 Emitir Boletim", type="primary"):
         # ---------------------------------------------------------
         str.header("📋 Boletim")
         
-        # Indicadores de aproveitamento
-        bloco1, bloco2, bloco3 = str.columns(3)
-        bloco1.metric("Sua Nota", f"{(total_acertos / 40) * 10:.1f} / 10.0")
-        bloco2.metric("Total de Acertos", f"{total_acertos} de 40")
-        bloco3.metric("Aproveitamento", f"{(total_acertos / 40) * 100:.1f}%")
+        # Indicadores de aproveitamento empilhados para melhor leitura em celulares
+        str.metric("Sua Nota", f"{(total_acertos / 40) * 10:.1f} / 10.0")
+        str.metric("Total de Acertos", f"{total_acertos} de 40")
+        str.metric("Aproveitamento", f"{(total_acertos / 40) * 100:.1f}%")
 
+        str.divider()
         str.subheader("📈 Desempenho por Categorias")
         
-        col_esq, col_dir = str.columns(2)
-        
-        with col_esq:
-            str.write("**Por Complexidade das Questões:**")
-            for dif, valores in indicadores_dificuldade.items():
-                porcentagem = (valores["acertos"] / valores["total"]) * 100 if valores["total"] > 0 else 0
-                str.write(f"- *Nível {dif}*: {valores['acertos']}/{valores['total']} ({porcentagem:.1f}%)")
-                str.progress(porcentagem / 100)
+        str.write("**Por Complexidade das Questões:**")
+        for dif, valores in indicadores_dificuldade.items():
+            porcentagem = (valores["acertos"] / valores["total"]) * 100 if valores["total"] > 0 else 0
+            str.write(f"- *Nível {dif}*: {valores['acertos']}/{valores['total']} ({porcentagem:.1f}%)")
+            str.progress(porcentagem / 100)
 
-        with col_dir:
-            str.write("**Por Domínio de Competência:**")
-            for dom, valores in indicadores_dominios.items():
-                porcentagem = (valores["acertos"] / valores["total"]) * 100 if valores["total"] > 0 else 0
-                str.write(f"- *{dom}*: {valores['acertos']}/{valores['total']} ({porcentagem:.1f}%)")
-                str.progress(porcentagem / 100)
+        str.divider()
+        str.write("**Por Domínio de Competência:**")
+        for dom, valores in indicadores_dominios.items():
+            porcentagem = (valores["acertos"] / valores["total"]) * 100 if valores["total"] > 0 else 0
+            str.write(f"- *{dom}*: {valores['acertos']}/{valores['total']} ({porcentagem:.1f}%)")
+            str.progress(porcentagem / 100)
 
         str.divider()
         str.subheader("🔍 Espelho de Respostas")
