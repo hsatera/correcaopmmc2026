@@ -12,8 +12,8 @@ try:
     URL_SISTEMA = st.secrets["SUPABASE_URL"]
     CHAVE_SISTEMA = st.secrets["SUPABASE_KEY"]
     cliente_banco: Client = create_client(URL_SISTEMA, CHAVE_SISTEMA)
-except Exception as e:
-    st.error(f"Erro de conexão com o servidor de envio: {e}")
+except Exception:
+    st.error("Erro de conexão com o servidor de envio. Por favor, contate o administrador.")
     st.stop()
 
 # ---------------------------------------------------------
@@ -70,9 +70,6 @@ st.markdown("Selecione os seus dados de identificação e preencha as alternativ
 # Identificação do Residente
 # ---------------------------------------------------------
 st.subheader("👤 Identificação")
-
-nome_residente = st.text_input("Nome completo:", placeholder="Digite seu nome completo")
-
 c1, c2 = st.columns(2)
 with c1:
     nivel_residencia = st.selectbox("Nível:", ["R1", "R2"])
@@ -89,9 +86,9 @@ respostas_inseridas = {}
 
 for numero_q in range(1, 41):
     respostas_inseridas[numero_q] = st.radio(
-        f"Questão {numero_q:02d}:",
+        "",  # Nome do preenchimento removido (label vazio)
         ["A", "B", "C", "D"],
-        index=None,
+        index=0,  # Letra A pré-marcada por padrão
         key=f"q_{numero_q}",
         horizontal=True
     )
@@ -100,16 +97,10 @@ st.divider()
 
 # Botão de Envio
 if st.button("📊 Emitir Boletim", type="primary", use_container_width=True):
-
-    # Validação de nome
-    if not nome_residente.strip():
-        st.error("Por favor, preencha seu nome completo antes de prosseguir.")
-        st.stop()
-
     pendentes = [q for q, resp in respostas_inseridas.items() if resp is None]
-
+    
     if pendentes:
-        st.error(f"Por favor, selecione uma alternativa para todas as questões antes de prosseguir. Pendentes: {pendentes}")
+        st.error(f"Por favor, selecione uma alternative para todas as questões antes de prosseguir. Pendentes: {pendentes}")
     else:
         total_acertos = 0
         dados_detalhados = []
@@ -119,15 +110,15 @@ if st.button("📊 Emitir Boletim", type="primary", use_container_width=True):
         for q, alternativa_usuario in respostas_inseridas.items():
             dados_referencia = MATRIZ_RESPOSTAS[q]
             correto = (alternativa_usuario == dados_referencia["resp"])
-
+            
             if correto:
                 total_acertos += 1
-
+            
             nivel_dif = dados_referencia["dificuldade"]
             indicadores_dificuldade[nivel_dif]["total"] += 1
             if correto:
                 indicadores_dificuldade[nivel_dif]["acertos"] += 1
-
+                
             for dom in dados_referencia["dominios"]:
                 if dom not in indicadores_dominios:
                     indicadores_dominios[dom] = {"acertos": 0, "total": 0}
@@ -143,26 +134,20 @@ if st.button("📊 Emitir Boletim", type="primary", use_container_width=True):
             })
 
         # ---------------------------------------------------------
-        # Armazenamento Seguro de Dados — com tratamento de erro visível
+        # Armazenamento Seguro de Dados (Invisível ao Aluno)
         # ---------------------------------------------------------
         respostas_finais_banco = {str(k): v for k, v in respostas_inseridas.items()}
         dados_registro = {
-            "nome": nome_residente.strip(),
             "residente_nivel": nivel_residencia,
             "instituicao": instituicao,
             "acertos": total_acertos,
             "respostas_usuario": respostas_finais_banco
         }
-
+        
         try:
-            resultado = cliente_banco.table("respostas_simulado").insert(dados_registro).execute()
-            # Verifica se o insert retornou dados (sucesso real)
-            if resultado.data:
-                st.success("✅ Respostas registradas com sucesso!")
-            else:
-                st.warning(f"⚠️ O envio pode ter falhado. Retorno do servidor: {resultado}")
-        except Exception as e:
-            st.error(f"❌ Erro ao salvar no banco de dados: {e}")
+            cliente_banco.table("respostas_simulado").insert(dados_registro).execute()
+        except Exception:
+            pass
 
         # ---------------------------------------------------------
         # Exibição Final do Boletim do Aluno
@@ -174,7 +159,7 @@ if st.button("📊 Emitir Boletim", type="primary", use_container_width=True):
 
         st.divider()
         st.subheader("📈 Desempenho por Categorias")
-
+        
         st.write("**Por Complexidade das Questões:**")
         for dif, valores in indicadores_dificuldade.items():
             porcentagem = (valores["acertos"] / valores["total"]) * 100 if valores["total"] > 0 else 0
@@ -203,22 +188,28 @@ senha_painel = st.text_input("Digite a senha de acesso institucional:", type="pa
 
 if senha_painel == "Correcao2026@":
     st.success("Acesso autorizado!")
-
+    
+    # Busca dados no Supabase de forma otimizada
     try:
         resposta_bd = cliente_banco.table("respostas_simulado").select("*").execute()
         dados_alunos = resposta_bd.data
-    except Exception as e:
+    except Exception:
         dados_alunos = []
-        st.error(f"Não foi possível conectar ao banco: {e}")
+        st.error("Não foi possível conectar para puxar as estatísticas gerais do banco.")
 
     if dados_alunos:
+        # Estrutura base de dados coletados
         df_bd = pd.DataFrame(dados_alunos)
-
+        
+        # Extrair ano da data_envio se disponível, caso contrário assume 2026
         if 'data_envio' in df_bd.columns:
             df_bd['ano'] = pd.to_datetime(df_bd['data_envio']).dt.year.astype(str)
         else:
             df_bd['ano'] = "2026"
 
+        # ---------------------------------------------------------
+        # Seção de Filtros Globais do Painel
+        # ---------------------------------------------------------
         st.markdown("### 🎛️ Filtros Avançados de Análise")
         fl1, fl2 = st.columns(2)
         with fl1:
@@ -229,24 +220,30 @@ if senha_painel == "Correcao2026@":
             filtro_dom = st.multiselect("Filtrar por Domínio da Questão:", options=todos_dominios_lista, default=todos_dominios_lista)
             filtro_q = st.multiselect("Filtrar por Questão Específica:", options=list(range(1, 41)), default=list(range(1, 41)))
 
+        # Aplicando filtros de Aluno (Ano e Instituição)
         df_filtrado = df_bd[(df_bd['ano'].isin(filtro_ano)) & (df_bd['instituicao'].isin(filtro_inst))]
-        total_respondentes = len(df_filtrado)
 
+        # Processamento Estatístico Geral por Questão
+        total_respondentes = len(df_filtrado)
+        
         estatisticas_questoes = []
         for q_num, info_matriz in MATRIZ_RESPOSTAS.items():
+            # Filtro por escopo de questão selecionado
             if q_num not in filtro_q:
                 continue
+            # Filtro por escopo de domínio selecionado
             if not any(d in filtro_dom for d in info_matriz["dominios"]):
                 continue
-
+                
             acertos_q = 0
             for idx, row in df_filtrado.iterrows():
                 respostas_dict = row['respostas_usuario']
                 if respostas_dict and respostas_dict.get(str(q_num)) == info_matriz["resp"]:
                     acertos_q += 1
-
+            
             pct_acerto = (acertos_q / total_respondentes * 100) if total_respondentes > 0 else 0
-
+            
+            # Cálculo de discriminação simples (Ex: <30% ruim, 30-70% média, >70% boa retenção)
             if pct_acerto < 35:
                 discrimina = "Alta Dificuldade / Revisar Conteúdo"
             elif pct_acerto > 85:
@@ -265,9 +262,12 @@ if senha_painel == "Correcao2026@":
 
         df_analise_questoes = pd.DataFrame(estatisticas_questoes)
 
+        # ---------------------------------------------------------
+        # SEÇÃO 1: Comparativo e Totalizadores
+        # ---------------------------------------------------------
         st.divider()
         st.markdown("### 📊 Seção 1: Comparativo de Participação")
-
+        
         m1, m2 = st.columns(2)
         m1.metric("Total de Respondentes (Filtro Atual)", total_respondentes)
         if total_respondentes > 0:
@@ -277,25 +277,23 @@ if senha_painel == "Correcao2026@":
             st.write("**Participação por Instituição:**")
             st.bar_chart(df_filtrado['instituicao'].value_counts())
 
+        # ---------------------------------------------------------
+        # SEÇÃO 2: Métricas por Questão, Dificuldade e Domínio
+        # ---------------------------------------------------------
         st.divider()
         st.markdown("### 🎯 Seção 2: Desempenho Técnico por Questão")
-
+        
         if not df_analise_questoes.empty:
             st.write("**Tabela de Métricas e Discriminação de Itens:**")
             st.dataframe(df_analise_questoes.set_index("Questão"), use_container_width=True)
+            
+            # Gráfico rápido de % de acerto por questão filtrada
             st.write("**Gráfico de Rendimento (% de Acertos por Questão):**")
             st.line_chart(df_analise_questoes.set_index("Questão")["% Acerto"])
         else:
             st.warning("Nenhuma questão corresponde aos filtros selecionados acima.")
-
-        # Lista de participantes
-        st.divider()
-        st.markdown("### 👥 Lista de Participantes")
-        colunas_exibir = [c for c in ["nome", "residente_nivel", "instituicao", "acertos"] if c in df_filtrado.columns]
-        st.dataframe(df_filtrado[colunas_exibir].sort_values("acertos", ascending=False), use_container_width=True)
-
+            
     else:
         st.info("O banco de dados ainda está vazio ou nenhum registro coincide com os parâmetros básicos.")
-
 elif senha_painel != "":
     st.error("Senha incorreta. Acesso negado.")
