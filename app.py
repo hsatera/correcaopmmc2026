@@ -1,20 +1,20 @@
-import streamlit as str
+import streamlit as st
 import pandas as pd
 from supabase import create_client, Client
 
 # Configurações da página
-str.set_page_config(page_title="Avaliação PMMC", page_icon="📝", layout="centered")
+st.set_page_config(page_title="Avaliação PMMC", page_icon="📝", layout="centered")
 
 # ---------------------------------------------------------
 # Conexão Segura em Segundo Plano
 # ---------------------------------------------------------
 try:
-    URL_SISTEMA = str.secrets["SUPABASE_URL"]
-    CHAVE_SISTEMA = str.secrets["SUPABASE_KEY"]
+    URL_SISTEMA = st.secrets["SUPABASE_URL"]
+    CHAVE_SISTEMA = st.secrets["SUPABASE_KEY"]
     cliente_banco: Client = create_client(URL_SISTEMA, CHAVE_SISTEMA)
 except Exception:
-    str.error("Erro de conexão com o servidor de envio. Por favor, contate o administrador.")
-    str.stop()
+    st.error("Erro de conexão com o servidor de envio. Por favor, contate o administrador.")
+    st.stop()
 
 # ---------------------------------------------------------
 # Matriz de Correção (Dados Internos Ocultos)
@@ -63,31 +63,29 @@ MATRIZ_RESPOSTAS = {
 }
 
 # Cabeçalho Oficial da Prova
-str.title("📝 AVALIAÇÃO PMMC JUNHO 2026")
-str.markdown("Selecione os seus dados de identificação e preencha as alternativas escolhidas para cada questão.")
+st.title("📝 AVALIAÇÃO PMMC JUNHO 2026")
+st.markdown("Selecione os seus dados de identificação e preencha as alternativas escolhidas para cada questão.")
 
 # ---------------------------------------------------------
-# Identificação do Residente (Dropdowns no Corpo do Site)
+# Identificação do Residente
 # ---------------------------------------------------------
-str.subheader("👤 Identificação")
-
-c1, c2 = str.columns(2)
+st.subheader("👤 Identificação")
+c1, c2 = st.columns(2)
 with c1:
-    nivel_residencia = str.selectbox("Nível:", ["R1", "R2"])
+    nivel_residencia = st.selectbox("Nível:", ["R1", "R2"])
 with c2:
-    instituicao = str.selectbox("Instituição:", ["PMC-CHOV", "Unicamp", "PUCCAMP", "PMC-Gatti"])
+    instituicao = st.selectbox("Instituição:", ["PMC-CHOV", "Unicamp", "PUCCAMP", "PMC-Gatti"])
 
-str.divider()
+st.divider()
 
 # ---------------------------------------------------------
 # Painel de Respostas (Mobile-Friendly)
 # ---------------------------------------------------------
-str.subheader("📋 Painel de Questões")
-
+st.subheader("📋 Painel de Questões")
 respostas_inseridas = {}
 
 for numero_q in range(1, 41):
-    respostas_inseridas[numero_q] = str.radio(
+    respostas_inseridas[numero_q] = st.radio(
         f"Questão {numero_q:02d}:",
         ["A", "B", "C", "D"],
         index=None,
@@ -95,16 +93,15 @@ for numero_q in range(1, 41):
         horizontal=True
     )
 
-str.divider()
+st.divider()
 
 # Botão de Envio
-if str.button("📊 Emitir Boletim", type="primary", use_container_width=True):
+if st.button("📊 Emitir Boletim", type="primary", use_container_width=True):
     pendentes = [q for q, resp in respostas_inseridas.items() if resp is None]
     
     if pendentes:
-        str.error(f"Por favor, selecione uma alternativa para todas as questões antes de prosseguir. Pendentes: {pendentes}")
+        st.error(f"Por favor, selecione uma alternativa para todas as questões antes de prosseguir. Pendentes: {pendentes}")
     else:
-        # Processamento Interno do Desempenho
         total_acertos = 0
         dados_detalhados = []
         indicadores_dificuldade = {"Fácil": {"acertos": 0, "total": 0}, "Intermediária": {"acertos": 0, "total": 0}}
@@ -153,31 +150,150 @@ if str.button("📊 Emitir Boletim", type="primary", use_container_width=True):
             pass
 
         # ---------------------------------------------------------
-        # Exibição Final do Boletim
+        # Exibição Final do Boletim do Aluno
         # ---------------------------------------------------------
-        str.header("📋 Boletim")
-        
-        str.metric("Sua Nota", f"{(total_acertos / 40) * 10:.1f} / 10.0")
-        str.metric("Total de Acertos", f"{total_acertos} de 40")
-        str.metric("Aproveitamento", f"{(total_acertos / 40) * 100:.1f}%")
+        st.header("📋 Boletim")
+        st.metric("Sua Nota", f"{(total_acertos / 40) * 10:.1f} / 10.0")
+        st.metric("Total de Acertos", f"{total_acertos} de 40")
+        st.metric("Aproveitamento", f"{(total_acertos / 40) * 100:.1f}%")
 
-        str.divider()
-        str.subheader("📈 Desempenho por Categorias")
+        st.divider()
+        st.subheader("📈 Desempenho por Categorias")
         
-        str.write("**Por Complexidade das Questões:**")
+        st.write("**Por Complexidade das Questões:**")
         for dif, valores in indicadores_dificuldade.items():
             porcentagem = (valores["acertos"] / valores["total"]) * 100 if valores["total"] > 0 else 0
-            str.write(f"- *Nível {dif}*: {valores['acertos']}/{valores['total']} ({porcentagem:.1f}%)")
-            str.progress(porcentagem / 100)
+            st.write(f"- *Nível {dif}*: {valores['acertos']}/{valores['total']} ({porcentagem:.1f}%)")
+            st.progress(porcentagem / 100)
 
-        str.divider()
-        str.write("**Por Domínio de Competência:**")
+        st.divider()
+        st.write("**Por Domínio de Competência:**")
         for dom, valores in indicadores_dominios.items():
             porcentagem = (valores["acertos"] / valores["total"]) * 100 if valores["total"] > 0 else 0
-            str.write(f"- *{dom}*: {valores['acertos']}/{valores['total']} ({porcentagem:.1f}%)")
-            str.progress(porcentagem / 100)
+            st.write(f"- *{dom}*: {valores['acertos']}/{valores['total']} ({porcentagem:.1f}%)")
+            st.progress(porcentagem / 100)
 
-        str.divider()
-        str.subheader("🔍 Espelho de Respostas")
+        st.divider()
+        st.subheader("🔍 Espelho de Respostas")
         df_final = pd.DataFrame(dados_detalhados)
-        str.dataframe(df_final.set_index("Questão"), use_container_width=True)
+        st.dataframe(df_final.set_index("Questão"), use_container_width=True)
+
+# ---------------------------------------------------------
+# PAINEL DE RESULTADOS - RESERVADO PARA PRECEPTORES (COM SENHA)
+# ---------------------------------------------------------
+st.markdown("<br><br><br><hr>", unsafe_allow_html=True)
+st.subheader("🔐 Área Restrita - Painel de Resultados")
+
+senha_painel = st.text_input("Digite a senha de acesso institucional:", type="password")
+
+if senha_painel == "Correcao2026@":
+    st.success("Acesso autorizado!")
+    
+    # Busca dados no Supabase de forma otimizada
+    try:
+        resposta_bd = cliente_banco.table("respostas_simulado").select("*").execute()
+        dados_alunos = resposta_bd.data
+    except Exception:
+        dados_alunos = []
+        st.error("Não foi possível conectar para puxar as estatísticas gerais do banco.")
+
+    if dados_alunos:
+        # Estrutura base de dados coletados
+        df_bd = pd.DataFrame(dados_alunos)
+        
+        # Extrair ano da data_envio se disponível, caso contrário assume 2026
+        if 'data_envio' in df_bd.columns:
+            df_bd['ano'] = pd.to_datetime(df_bd['data_envio']).dt.year.astype(str)
+        else:
+            df_bd['ano'] = "2026"
+
+        # ---------------------------------------------------------
+        # Seção de Filtros Globais do Painel
+        # ---------------------------------------------------------
+        st.markdown("### 🎛️ Filtros Avançados de Análise")
+        fl1, fl2 = st.columns(2)
+        with fl1:
+            filtro_ano = st.multiselect("Filtrar por Ano:", options=list(df_bd['ano'].unique()), default=list(df_bd['ano'].unique()))
+            filtro_inst = st.multiselect("Filtrar por Instituição:", options=list(df_bd['instituicao'].unique()), default=list(df_bd['instituicao'].unique()))
+        with fl2:
+            todos_dominios_lista = sorted(list(set([d for q in MATRIZ_RESPOSTAS.values() for d in q["dominios"]])))
+            filtro_dom = st.multiselect("Filtrar por Domínio da Questão:", options=todos_dominios_lista, default=todos_dominios_lista)
+            filtro_q = st.multiselect("Filtrar por Questão Específica:", options=list(range(1, 41)), default=list(range(1, 41)))
+
+        # Aplicando filtros de Aluno (Ano e Instituição)
+        df_filtrado = df_bd[(df_bd['ano'].isin(filtro_ano)) & (df_bd['instituicao'].isin(filtro_inst))]
+
+        # Processamento Estatístico Geral por Questão
+        total_respondentes = len(df_filtrado)
+        
+        estatisticas_questoes = []
+        for q_num, info_matriz in MATRIZ_RESPOSTAS.items():
+            # Filtro por escopo de questão selecionado
+            if q_num not in filtro_q:
+                continue
+            # Filtro por escopo de domínio selecionado
+            if not any(d in filtro_dom for d in info_matriz["dominios"]):
+                continue
+                
+            acertos_q = 0
+            for idx, row in df_filtrado.iterrows():
+                respostas_dict = row['respostas_usuario']
+                if respostas_dict and respostas_dict.get(str(q_num)) == info_matriz["resp"]:
+                    acertos_q += 1
+            
+            pct_acerto = (acertos_q / total_respondentes * 100) if total_respondentes > 0 else 0
+            
+            # Cálculo de discriminação simples (Ex: <30% ruim, 30-70% média, >70% boa retenção)
+            if pct_acerto < 35:
+                discrimina = "Alta Dificuldade / Revisar Conteúdo"
+            elif pct_acerto > 85:
+                discrimina = "Excelente Retenção / Domínio Consolidado"
+            else:
+                discrimina = "Esperada / Balanceada"
+
+            estatisticas_questoes.append({
+                "Questão": q_num,
+                "Tema": info_matriz["tema"],
+                "Dificuldade": info_matriz["dificuldade"],
+                "Domínios": ", ".join(info_matriz["dominios"]),
+                "% Acerto": round(pct_acerto, 1),
+                "Discriminação": discrimina
+            })
+
+        df_analise_questoes = pd.DataFrame(estatisticas_questoes)
+
+        # ---------------------------------------------------------
+        # SEÇÃO 1: Comparativo e Totalizadores
+        # ---------------------------------------------------------
+        st.divider()
+        st.markdown("### 📊 Seção 1: Comparativo de Participação")
+        
+        m1, m2 = st.columns(2)
+        m1.metric("Total de Respondentes (Filtro Atual)", total_respondentes)
+        if total_respondentes > 0:
+            m2.metric("Média Geral de Acertos", f"{round(df_filtrado['acertos'].mean(), 1)} / 40")
+
+        if total_respondentes > 0:
+            st.write("**Participação por Instituição:**")
+            st.bar_chart(df_filtrado['instituicao'].value_counts())
+
+        # ---------------------------------------------------------
+        # SEÇÃO 2: Métricas por Questão, Dificuldade e Domínio
+        # ---------------------------------------------------------
+        st.divider()
+        st.markdown("### 🎯 Seção 2: Desempenho Técnico por Questão")
+        
+        if not df_analise_questoes.empty:
+            st.write("**Tabela de Métricas e Discriminação de Itens:**")
+            st.dataframe(df_analise_questoes.set_index("Questão"), use_container_width=True)
+            
+            # Gráfico rápido de % de acerto por questão filtrada
+            st.write("**Gráfico de Rendimento (% de Acertos por Questão):**")
+            st.line_chart(df_analise_questoes.set_index("Questão")["% Acerto"])
+        else:
+            st.warning("Nenhuma questão corresponde aos filtros selecionados acima.")
+            
+    else:
+        st.info("O banco de dados ainda está vazio ou nenhum registro coincide com os parâmetros básicos.")
+elif senha_painel != "":
+    st.error("Senha incorreta. Acesso negado.")
