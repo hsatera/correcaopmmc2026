@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from supabase import create_client, Client
-from fpdf import FPDF
-import io
 
 # Configurações da página
 st.set_page_config(page_title="Avaliação PMMC", page_icon="📝", layout="wide")
@@ -66,101 +64,6 @@ MATRIZ_RESPOSTAS = {
 }
 
 # ---------------------------------------------------------
-# Funções Auxiliares para Geração de PDF
-# ---------------------------------------------------------
-def gerar_pdf_individual(nivel, inst, nota, acertos, pct, df_detalhado):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(190, 10, "Relatorio de Desempenho Individual - PMMC", ln=True, align="C")
-    pdf.ln(5)
-    
-    pdf.set_font("Arial", "", 12)
-    pdf.cell(190, 8, f"Nivel: {nivel}  |  Instituicao: {inst}", ln=True, align="C")
-    pdf.ln(10)
-    
-    # Métricas
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(63, 10, f"Sua Nota: {nota:.1f} / 10.0", border=1, align="C")
-    pdf.cell(63, 10, f"Acertos: {acertos} / 40", border=1, align="C")
-    pdf.cell(64, 10, f"Aproveitamento: {pct:.1f}%", border=1, align="C")
-    pdf.ln(15)
-    
-    # Tabela de Questões
-    pdf.set_font("Arial", "B", 11)
-    pdf.cell(20, 8, "Q.", border=1)
-    pdf.cell(85, 8, "Tema", border=1)
-    pdf.cell(30, 8, "Sua Escolha", border=1, align="C")
-    pdf.cell(25, 8, "Gabarito", border=1, align="C")
-    pdf.cell(30, 8, "Situacao", border=1, align="C")
-    pdf.ln()
-    
-    pdf.set_font("Arial", "", 10)
-    for _, row in df_detalhado.iterrows():
-        sit = "Correto" if "🟢" in row["Situação"] else "Incorreto"
-        pdf.cell(20, 7, str(row["Questão"]), border=1)
-        pdf.cell(85, 7, str(row["Tema"]), border=1)
-        pdf.cell(30, 7, str(row["Sua Escolha"]), border=1, align="C")
-        pdf.cell(25, 7, str(row["Gabarito"]), border=1, align="C")
-        pdf.cell(30, 7, sit, border=1, align="C")
-        pdf.ln()
-        
-    return pdf.output()
-
-def gerar_pdf_geral(total_alunos, media_q, nota_m, df_inst, df_nivel):
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", "B", 16)
-    pdf.cell(190, 10, "Relatorio de Desempenho Geral - PMMC", ln=True, align="C")
-    pdf.ln(10)
-    
-    # Resumo Consolidador
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(190, 8, "1. Resumo Geral Consolidador", ln=True)
-    pdf.set_font("Arial", "", 11)
-    pdf.cell(190, 7, f"- Total de Alunos Avaliados: {total_alunos} residentes", ln=True)
-    pdf.cell(190, 7, f"- Media Geral de Acertos: {media_q:.1f} / 40 questoes", ln=True)
-    pdf.cell(190, 7, f"- Nota Media do Grupo: {nota_m:.2f} / 10.0", ln=True)
-    pdf.ln(10)
-    
-    # Tabela Instituição
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(190, 8, "2. Rendimento por Instituicao de Ensino", ln=True)
-    pdf.set_font("Arial", "B", 10)
-    pdf.cell(50, 8, "Instituicao", border=1)
-    pdf.cell(45, 8, "N. Respondentes", border=1, align="C")
-    pdf.cell(45, 8, "Media Acertos", border=1, align="C")
-    pdf.cell(50, 8, "Nota Media (0-10)", border=1, align="C")
-    pdf.ln()
-    
-    pdf.set_font("Arial", "", 10)
-    for idx, row in df_inst.iterrows():
-        pdf.cell(50, 7, str(idx), border=1)
-        pdf.cell(45, 7, str(row['Nº de Respondentes']), border=1, align="C")
-        pdf.cell(45, 7, f"{row['Média de Acertos']:.1f}", border=1, align="C")
-        pdf.cell(50, 7, f"{row['Nota Média (0-10)']:.2f}", border=1, align="C")
-        pdf.ln()
-    pdf.ln(10)
-        
-    # Tabela Nível
-    pdf.set_font("Arial", "B", 12)
-    pdf.cell(190, 8, "3. Rendimento por Nivel de Residencia", ln=True)
-    pdf.set_font("Arial", "B", 10)
-    pdf.cell(60, 8, "Nivel Residencia", border=1)
-    pdf.cell(60, 8, "Qtd Alunos", border=1, align="C")
-    pdf.cell(70, 8, "Media de Acertos", border=1, align="C")
-    pdf.ln()
-    
-    pdf.set_font("Arial", "", 10)
-    for idx, row in df_nivel.iterrows():
-        pdf.cell(60, 7, str(idx), border=1)
-        pdf.cell(60, 7, str(row['Qtd Alunos']), border=1, align="C")
-        pdf.cell(70, 7, f"{row['Média de Acertos']:.1f}", border=1, align="C")
-        pdf.ln()
-        
-    return pdf.output()
-
-# ---------------------------------------------------------
 # Menu de Navegação no Lado Esquerdo (Sidebar)
 # ---------------------------------------------------------
 st.sidebar.title("📌 Menu de Navegação")
@@ -188,6 +91,7 @@ if pagina_selecionada == "📝 Responder Simulado":
     st.subheader("📋 Painel de Questões")
     respostas_inseridas = {}
 
+    # Layout em colunas para ocupar menos espaço vertical na folha de respostas
     for numero_q in range(1, 41):
         respostas_inseridas[numero_q] = st.radio(
             f"Questão {numero_q}", 
@@ -232,6 +136,7 @@ if pagina_selecionada == "📝 Responder Simulado":
                 "Situação": "🟢 Correto" if correto else "🔴 Incorreto"
             })
 
+        # Armazenamento Seguro de Dados (Invisível ao Aluno)
         respostas_finais_banco = {str(k): v for k, v in respostas_inseridas.items()}
         dados_registro = {
             "residente_nivel": nivel_residencia,
@@ -247,20 +152,6 @@ if pagina_selecionada == "📝 Responder Simulado":
 
         # Exibição Final do Boletim do Aluno
         st.header("📋 Seu Resultado Individual")
-        
-        # --- EXPORTAÇÃO EM PDF (INDIVIDUAL) ---
-        df_detalhado_export = pd.DataFrame(dados_detalhados)
-        pdf_ind_bytes = gerar_pdf_individual(
-            nivel_residencia, instituicao, (total_acertos / 40) * 10, total_acertos, (total_acertos / 40) * 100, df_detalhado_export
-        )
-        st.download_button(
-            label="📥 Exportar Relatório de desempenho individual (PDF)",
-            data=bytes(pdf_ind_bytes),
-            file_name=f"Relatorio_Individual_{nivel_residencia}_{instituicao}.pdf",
-            mime="application/pdf"
-        )
-        st.ln(2)
-
         col_b1, col_b2, col_b3 = st.columns(3)
         col_b1.metric("Sua Nota", f"{(total_acertos / 40) * 10:.1f} / 10.0")
         col_b2.metric("Total de Acertos", f"{total_acertos} de 40")
@@ -285,7 +176,8 @@ if pagina_selecionada == "📝 Responder Simulado":
 
         st.divider()
         st.subheader("🔍 Espelho da Prova")
-        st.dataframe(df_detalhado_export.set_index("Questão"), use_container_width=True)
+        df_final = pd.DataFrame(dados_detalhados)
+        st.dataframe(df_final.set_index("Questão"), use_container_width=True)
 
 # ---------------------------------------------------------
 # SEÇÃO 2: PAINEL DE RESULTADOS (BOLETIM GERAL)
@@ -299,6 +191,7 @@ elif pagina_selecionada == "📊 Boletim Geral (Preceptores)":
     if senha_painel == "Correcao2026@":
         st.success("Acesso autorizado de nível institucional!")
         
+        # Puxa os dados do Supabase
         try:
             resposta_bd = cliente_banco.table("respostas_simulado").select("*").execute()
             dados_alunos = resposta_bd.data
@@ -314,6 +207,9 @@ elif pagina_selecionada == "📊 Boletim Geral (Preceptores)":
             else:
                 df_bd['ano'] = "2026"
 
+            # ---------------------------------------------------------
+            # Painel de Filtros Superiores
+            # ---------------------------------------------------------
             st.markdown("### 🎛️ Filtros Avançados")
             fl1, fl2 = st.columns(2)
             with fl1:
@@ -323,6 +219,7 @@ elif pagina_selecionada == "📊 Boletim Geral (Preceptores)":
                 filtro_nivel = st.multiselect("Filtrar por Ano de Residência:", options=list(df_bd['residente_nivel'].unique()), default=list(df_bd['residente_nivel'].unique()))
                 filtro_q = st.multiselect("Filtrar Questões no Painel:", options=list(range(1, 41)), default=list(range(1, 41)))
 
+            # Aplicando os Filtros
             df_filtrado = df_bd[
                 (df_bd['ano'].isin(filtro_ano)) & 
                 (df_bd['instituicao'].isin(filtro_inst)) &
@@ -332,57 +229,59 @@ elif pagina_selecionada == "📊 Boletim Geral (Preceptores)":
             total_respondentes = len(df_filtrado)
 
             if total_respondentes > 0:
+                # ---------------------------------------------------------
+                # 1. RESUMO GERAL DE DESEMPENHO
+                # ---------------------------------------------------------
+                st.divider()
+                st.subheader("📈 1. Resumo Geral Consolidador")
                 
-                # Preparação de dataframes para tabelas estruturadas
+                c_res1, c_res2, c_res3 = st.columns(3)
+                media_acertos = df_filtrado['acertos'].mean()
+                c_res1.metric("Total de Alunos Avaliados", f"{total_respondentes} residentes")
+                c_res2.metric("Média Geral de Acertos", f"{media_acertos:.1f} / 40 questões")
+                c_res3.metric("Nota Média do Grupo", f"{(media_acertos / 40) * 10:.2f} / 10.0")
+
+                # ---------------------------------------------------------
+                # 2. DESEMPENHO POR INSTITUIÇÃO
+                # ---------------------------------------------------------
+                st.divider()
+                st.subheader("🏢 2. Rendimento por Instituição de Ensino")
+                
                 resumo_inst = df_filtrado.groupby('instituicao').agg(
                     Total_Alunos=('acertos', 'count'),
                     Media_Acertos=('acertos', 'mean'),
                     Nota_Media=('acertos', lambda x: (x.mean() / 40) * 10)
                 ).reset_index()
+                
                 resumo_inst['Aproveitamento (%)'] = (resumo_inst['Media_Acertos'] / 40) * 100
                 resumo_inst = resumo_inst.rename(columns={
-                    'instituicao': 'Instituição', 'Total_Alunos': 'Nº de Respondentes',
-                    'Media_Acertos': 'Média de Acertos', 'Nota_Media': 'Nota Média (0-10)'
-                }).set_index('Instituição')
+                    'instituicao': 'Instituição',
+                    'Total_Alunos': 'Nº de Respondentes',
+                    'Media_Acertos': 'Média de Acertos',
+                    'Nota_Media': 'Nota Média (0-10)'
+                })
+                st.dataframe(resumo_inst.set_index('Instituição').style.format({'Média de Acertos': '{:.1f}', 'Nota Média (0-10)': '{:.2f}', 'Aproveitamento (%)': '{:.1f}%'}), use_container_width=True)
 
+                # ---------------------------------------------------------
+                # 3. DESEMPENHO POR NÍVEL (R1/R2)
+                # ---------------------------------------------------------
+                st.divider()
+                st.subheader("🎓 3. Rendimento por Nível de Residência (R1 vs R2)")
+                
                 resumo_nivel = df_filtrado.groupby('residente_nivel').agg(
                     Total_Alunos=('acertos', 'count'),
                     Media_Acertos=('acertos', 'mean')
                 ).reset_index()
                 resumo_nivel['Aproveitamento (%)'] = (resumo_nivel['Media_Acertos'] / 40) * 100
-                resumo_nivel = resumo_nivel.rename(columns={'residente_nivel': 'Nível Residência', 'Total_Alunos': 'Qtd Alunos', 'Media_Acertos': 'Média de Acertos'}).set_index('Nível Residência')
-
-                media_acertos = df_filtrado['acertos'].mean()
-                nota_media_grupo = (media_acertos / 40) * 10
-
-                # --- EXPORTAÇÃO EM PDF (GERAL) ---
-                st.divider()
-                pdf_geral_bytes = gerar_pdf_general(total_respondentes, media_acertos, nota_media_grupo, resumo_inst, resumo_nivel)
-                st.download_button(
-                    label="📥 Exportar Relatório de desempenho geral (PDF)",
-                    data=bytes(pdf_geral_bytes),
-                    file_name="Relatorio_Desempenho_Geral_PMMC.pdf",
-                    mime="application/pdf"
-                )
+                resumo_nivel = resumo_nivel.rename(columns={'residente_nivel': 'Nível Residência', 'Total_Alunos': 'Qtd Alunos', 'Media_Acertos': 'Média de Acertos'})
                 
-                # 1. RESUMO GERAL DE DESEMPENHO
-                st.subheader("📈 1. Resumo Geral Consolidador")
-                c_res1, c_res2, c_res3 = st.columns(3)
-                c_res1.metric("Total de Alunos Avaliados", f"{total_respondentes} residentes")
-                c_res2.metric("Média Geral de Acertos", f"{media_acertos:.1f} / 40 questões")
-                c_res3.metric("Nota Média do Grupo", f"{nota_media_grupo:.2f} / 10.0")
+                st.dataframe(resumo_nivel.set_index('Nível Residência').style.format({'Média de Acertos': '{:.1f}', 'Aproveitamento (%)': '{:.1f}%'}), use_container_width=True)
 
-                # 2. DESEMPENHO POR INSTITUIÇÃO
-                st.divider()
-                st.subheader("🏢 2. Rendimento por Instituição de Ensino")
-                st.dataframe(resumo_inst.style.format({'Média de Acertos': '{:.1f}', 'Nota Média (0-10)': '{:.2f}', 'Aproveitamento (%)': '{:.1f}%'}), use_container_width=True)
-
-                # 3. DESEMPENHO POR NÍVEL (R1/R2)
-                st.divider()
-                st.subheader("🎓 3. Rendimento por Nível de Residência (R1 vs R2)")
-                st.dataframe(resumo_nivel.style.format({'Média de Acertos': '{:.1f}', 'Aproveitamento (%)': '{:.1f}%'}), use_container_width=True)
-
-                # PROCESSAMENTO POR ITEM (TRI)
+                # ---------------------------------------------------------
+                # PROCESSAMENTO POR ITEM (Dificuldade, Domínio e Discriminação TRI)
+                # ---------------------------------------------------------
+                # Cálculo dos grupos superior e inferior para achar a taxa de discriminação real (TRI clássica)
+                # Separa os top 27% alunos com maiores notas e bottom 27% alunos com menores notas
                 notas_ordenadas = df_filtrado.sort_values(by='acertos', ascending=False)
                 tamanho_grupo = max(1, int(round(total_respondentes * 0.27)))
                 grupo_superior = notas_ordenadas.head(tamanho_grupo)
@@ -393,9 +292,11 @@ elif pagina_selecionada == "📊 Boletim Geral (Preceptores)":
                 comp_dominios = {}
 
                 for q_num, info_matriz in MATRIZ_RESPOSTAS.items():
+                    # Filtro de questões selecionadas pelo usuário na tela
                     if q_num not in filtro_q:
                         continue
                     
+                    # Contagem de acertos geral, no grupo superior e inferior
                     acertos_geral = 0
                     acertos_sup = 0
                     acertos_inf = 0
@@ -411,6 +312,7 @@ elif pagina_selecionada == "📊 Boletim Geral (Preceptores)":
                     pct_sup = (acertos_sup / tamanho_grupo) * 100
                     pct_inf = (acertos_inf / tamanho_grupo) * 100
                     
+                    # Índice de Discriminação (D = % Acerto Sup - % Acerto Inf)
                     taxa_discriminacao = (pct_sup - pct_inf) / 100
 
                     if taxa_discriminacao >= 0.40: class_dis = "Excelente Item"
@@ -419,10 +321,12 @@ elif pagina_selecionada == "📊 Boletim Geral (Preceptores)":
                     elif taxa_discriminacao < 0: class_dis = "⚠️ Inversa (Rever Gabarito)"
                     else: class_dis = "Fraca Discriminação"
 
+                    # Agrega por nível de dificuldade
                     dif = info_matriz["dificuldade"]
                     if dif not in comp_dificuldade: comp_dificuldade[dif] = []
                     comp_dificuldade[dif].append(pct_geral)
 
+                    # Agrega por domínios
                     for d in info_matriz["dominios"]:
                         if d not in comp_dominios: comp_dominios[d] = []
                         comp_dominios[d].append(pct_geral)
@@ -439,19 +343,25 @@ elif pagina_selecionada == "📊 Boletim Geral (Preceptores)":
 
                 df_analise_questoes = pd.DataFrame(estatisticas_questoes)
 
+                # ---------------------------------------------------------
                 # 4. DESEMPENHO POR DIFICULDADE
+                # ---------------------------------------------------------
                 st.divider()
                 st.subheader("📊 4. Rendimento por Nível de Dificuldade de Questão")
                 dif_data = [{"Dificuldade": k, "Média de Acerto (%)": np.mean(v)} for k, v in comp_dificuldade.items()]
                 st.dataframe(pd.DataFrame(dif_data).set_index("Dificuldade").style.format({'Média de Acerto (%)': '{:.1f}%'}), use_container_width=True)
 
+                # ---------------------------------------------------------
                 # 5. DESEMPENHO POR DOMÍNIO
+                # ---------------------------------------------------------
                 st.divider()
                 st.subheader("🎯 5. Aproveitamento por Domínio de Competência")
                 dom_data = [{"Domínio de Conhecimento": k, "Média de Acerto Grupo (%)": np.mean(v)} for k, v in comp_dominios.items()]
                 st.dataframe(pd.DataFrame(dom_data).set_index("Domínio de Conhecimento").style.format({'Média de Acerto Grupo (%)': '{:.1f}%'}), use_container_width=True)
 
+                # ---------------------------------------------------------
                 # 6. DISCRIMINAÇÃO POR QUESTÃO
+                # ---------------------------------------------------------
                 st.divider()
                 st.subheader("🔍 6. Espelho Detalhado de Itens e Taxa de Discriminação (TRI)")
                 st.markdown("""
@@ -460,6 +370,7 @@ elif pagina_selecionada == "📊 Boletim Geral (Preceptores)":
                 """)
                 st.dataframe(df_analise_questoes.set_index("Questão"), use_container_width=True)
 
+                # Gráfico de Rendimento
                 st.write("**Gráfico de Rendimento Linear por Questão (% de Acertos):**")
                 st.line_chart(df_analise_questoes.set_index("Questão")["% Acerto Geral"])
 
